@@ -76,7 +76,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	static HDC hdc;
 	static DrawAreaInfo dAInfo;
 	PAINTSTRUCT ps;
-	
+
 	RECT clientRect;
 	static Graph gr;
 	switch (message)
@@ -170,13 +170,13 @@ POINT ConvertCoordinates(int x, int y, int widthOld, int heightOld)
 
 DrawAreaInfo GetAreaInfo(int x, int y)
 {
-	int xPoints, yPoints, divValueX, divValueY , a,b; // Кол-во делений
+	int xPoints, yPoints, divValueX, divValueY, a, b; // Кол-во делений
 	xPoints = 7; yPoints = 14;
 	divValueX = x / (xPoints * 2);
 	divValueY = y / (yPoints * 2);
 	int newX, newY; newX = x / 2; newY = y / 2;
 	DrawAreaInfo di;
-	a = 0; b = 4;
+	a = -3; b = 4;
 	di.divValueX = divValueX; di.divValueY = divValueY; di.newX = newX; di.newY = newY; di.xPoints = xPoints; di.yPoints = yPoints;
 	di.a = a; di.b = b;
 	return di;
@@ -218,17 +218,21 @@ DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr)
 	//double fx = log(dai.a / dai.divValueX);
 	//double fx = 1.0/(dai.a / dai.divValueX);
 	//double fx = 0;
-	double fx = sqrt(dai.a * dai.divValueX);
-	MoveToEx(hdc, dai.a * dai.divValueX, fx * dai.divValueY, NULL);
+	//double fx = sqrt(dai.a * dai.divValueX);
+	double fx = exp(dai.a * dai.divValueX);
+	//if (fx == fx && !isinf(fx))
+		MoveToEx(hdc, dai.a * dai.divValueX, fx * dai.divValueY, NULL);
 	//LineTo(hdc, xArg, fx * dai.divValueY);
 	// Drawing
-	for (double xArg = dai.a  * dai.divValueX; xArg <= dai.b * dai.divValueX; xArg += 0.1)
+	for (double xArg = dai.a * dai.divValueX; xArg <= dai.b * dai.divValueX; xArg += 0.1)
 	{
-		fx = sqrt(xArg / dai.divValueX);
+		fx = exp(xArg / dai.divValueX);
+		//fx = sqrt(xArg / dai.divValueX);
 		//fx = log(xArg / dai.divValueX);
-		 //fx = 1.0/(xArg / dai.divValueX);
-		//fx = gr.a * ((xArg / dai.divValueX) * (xArg / dai.divValueX)) + gr.b * (xArg / dai.divValueX) + gr.c;
-		LineTo(hdc, xArg, fx * dai.divValueY);
+		//fx = 1.0/(xArg / dai.divValueX);
+	   //fx = gr.a * ((xArg / dai.divValueX) * (xArg / dai.divValueX)) + gr.b * (xArg / dai.divValueX) + gr.c;
+		if (fx == fx)
+			LineTo(hdc, xArg, fx * dai.divValueY);
 		//SetPixel(hdc, xArg, fx * dai.divValueY, RGB(0,0,0));
 	}
 
