@@ -166,7 +166,7 @@ void DrawCar(HDC& hdc, RECT& area, int angleDeg)
 {
 	int x = abs(area.left - area.right);
 	int y = abs(area.top - area.bottom);
-	int wheelR = y / 8;
+	int wheelR = y / 6;
 	POINT wheel1, wheel2;
 	wheel1.x = area.left + x / 3; wheel1.y = area.top + y - wheelR;
 	wheel2.x =area.left+ x - x / 3; wheel2.y = area.top + y - wheelR;
