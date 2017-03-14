@@ -13,7 +13,7 @@ struct Graph
 };
 struct DrawAreaInfo
 {
-	int xPoints, yPoints, divValueX, divValueY, newX, newY;
+	int xPoints, yPoints, divValueX, divValueY, newX, newY, a, b;
 };
 BOOL InitApplication(HINSTANCE hinstance);
 BOOL InitInstance(HINSTANCE hinstance, int nCmdShow);
@@ -83,7 +83,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	{
 	case WM_CREATE:
 		hdc = GetDC(hwnd);
-		gr.a = -2; gr.b = 2; gr.c = 0;
+		gr.a = 1; gr.b = 1; gr.c = 1;
 
 		break;
 	case WM_SIZE:
@@ -106,15 +106,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		int cx = LOWORD(lparam);
 		int cy = HIWORD(lparam);
 		POINT clickedCoord = ConvertCoordinates(cx, cy, x, y);
-		double res = (gr.a*((double)clickedCoord.x / di.divValueX)*((double)clickedCoord.x / di.divValueX) + gr.b*((double)clickedCoord.x / di.divValueX) + gr.c);
+
+		//double fx = log((double)clickedCoord.x / di.divValueX );
+		 double fx = 1.0/((double)clickedCoord.x / di.divValueX );
+		
+		//double fx = (gr.a*((double)clickedCoord.x / di.divValueX)*((double)clickedCoord.x / di.divValueX) + gr.b*((double)clickedCoord.x / di.divValueX) + gr.c);
 
 		//double newY = (double)clickedCoord.y / di.divValueY;
-		double distance = abs(res - ((double)clickedCoord.y) / di.divValueY);
+		double distance = abs(fx - ((double)clickedCoord.y) / di.divValueY);
 		if (distance <= 0.8)
 		{
 			string text;
 			double t = (double)clickedCoord.x / di.divValueX;
-			text += "X: " + to_string(t); text += ", Y : " + to_string(res);
+			text += "X: " + to_string(t); text += ", Y : " + to_string(fx);
 			TextOut(hdc, 0, 0, text.c_str(), text.size());
 		}
 		break;
@@ -166,13 +170,15 @@ POINT ConvertCoordinates(int x, int y, int widthOld, int heightOld)
 
 DrawAreaInfo GetAreaInfo(int x, int y)
 {
-	int xPoints, yPoints, divValueX, divValueY; // Кол-во делений
-	xPoints = 10; yPoints = 10;
+	int xPoints, yPoints, divValueX, divValueY , a,b; // Кол-во делений
+	xPoints = 7; yPoints = 14;
 	divValueX = x / (xPoints * 2);
 	divValueY = y / (yPoints * 2);
 	int newX, newY; newX = x / 2; newY = y / 2;
 	DrawAreaInfo di;
+	a = 0; b = 3;
 	di.divValueX = divValueX; di.divValueY = divValueY; di.newX = newX; di.newY = newY; di.xPoints = xPoints; di.yPoints = yPoints;
+	di.a = a; di.b = b;
 	return di;
 }
 DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr)
@@ -206,14 +212,34 @@ DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr)
 		MoveToEx(hdc, 5, -yy, NULL);
 		LineTo(hdc, -5, -yy);
 	}
-	MoveToEx(hdc, -dai.newX, 0, NULL);
+	MoveToEx(hdc, dai.a, 0, NULL);
+	//MoveToEx(hdc, -dai.newX, 0, NULL);
+
+	//double fx = log(dai.a / dai.divValueX);
+	double fx = 1.0/(dai.a / dai.divValueX);
+	//double fx = gr.a * ((xArg / dai.divValueX) * (xArg / dai.divValueX)) + gr.b * (xArg / dai.divValueX) + gr.c;
+	MoveToEx(hdc, dai.a * dai.divValueX, fx * dai.divValueY, NULL);
+	//LineTo(hdc, xArg, fx * dai.divValueY);
 	// Drawing
-	for (double xArg = -dai.newX; xArg <= dai.newX; xArg += 0.1)
+	for (double xArg = dai.a  * dai.divValueX; xArg <= dai.b * dai.divValueX; xArg += 0.1)
 	{
-		double fx = gr.a * ((xArg / dai.divValueX) * (xArg / dai.divValueX)) + gr.b * (xArg / dai.divValueX) + gr.c;
+		//fx = log(xArg / dai.divValueX);
+		 fx = 1.0/(xArg / dai.divValueX);
+		//fx = gr.a * ((xArg / dai.divValueX) * (xArg / dai.divValueX)) + gr.b * (xArg / dai.divValueX) + gr.c;
 		LineTo(hdc, xArg, fx * dai.divValueY);
-		//SetPixel(hdc, xArg, fx * divValueY, RGB(0,0,0));
+		//SetPixel(hdc, xArg, fx * dai.divValueY, RGB(0,0,0));
 	}
+
+	newPen = CreatePen(PS_DOT, 1, BLACK_PEN);
+	oldPen = (HPEN)SelectObject(hdc, newPen);
+	MoveToEx(hdc, dai.a * dai.divValueX, dai.newY, NULL);
+	LineTo(hdc, dai.a * dai.divValueX, -dai.newY);
+
+	MoveToEx(hdc, dai.b * dai.divValueX, dai.newY, NULL);
+	LineTo(hdc, dai.b * dai.divValueX, -dai.newY);
+	SelectObject(hdc, oldPen);
+	DeleteObject(newPen);
+
 	return dai;
 }
 double GetDistance(int x1, int y1, int x2, int y2)
