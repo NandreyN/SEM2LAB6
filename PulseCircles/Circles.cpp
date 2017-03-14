@@ -45,9 +45,8 @@ bool isInCircle(Circle& circle, int x, int y);
 bool PerformCircleChanging(HDC& hdc, Circle& circle, int delta, bool state, rgb& color);
 
 static char appName[] = "Lab6";
-static char title[] = "TrafficLight";
+static char title[] = "Circles";
 
-HINSTANCE h;
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE prevHinstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	MSG msg;
@@ -153,7 +152,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 			{
 				beat[i] = true;
 				SetTimer(hwnd, i, 500, NULL);
-				//MessageBox(NULL,to_string(i).data(),"222", MB_OK);
 				break;
 			}
 		break;
