@@ -97,7 +97,7 @@ BOOL InitApplication(HINSTANCE hinstance)
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	static int x, y, R;
+	static int x, y, R, delta;
 	static bool beat[3];
 	static bool currentStates[3];
 
@@ -159,6 +159,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 
 	case WM_RBUTTONUP:
 	{
+		delta = R *0.2;
 		int cX = LOWORD(lparam), cY = HIWORD(lparam);
 		for (int i = 0; i < 3; i++)
 			if (isInCircle(circles[i], cX, cY))
@@ -173,8 +174,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	case WM_TIMER:
 	{
 		hdc = GetDC(hwnd);
-		int delta = R *0.2;
-
+		delta = R*0.2;
 		switch (wparam)
 		{
 		case 0: // red
