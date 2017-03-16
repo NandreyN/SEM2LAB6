@@ -2,6 +2,7 @@
 #include <windows.h>
 #include  <math.h>
 #define BALL_TIMER 0
+#define SPEED 5
 
 using namespace std;
 
@@ -72,12 +73,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	static HDC hdc;
 	static Circle circle;
 	static bool isDirect, moves;
+	PAINTSTRUCT ps;
 
 	switch (message)
 	{
 	case WM_CREATE:
-		hdc = GetDC(hwnd);
-		SetTimer(hwnd, BALL_TIMER, 20, (TIMERPROC)NULL);
+		SetTimer(hwnd, BALL_TIMER, 1000, (TIMERPROC)NULL);
 		circle.center.x = circle.center.y = 0;
 		circle.R = 30;
 		isDirect = true;
@@ -87,19 +88,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		x = LOWORD(lparam);
 		y = HIWORD(lparam);
 		break;
+	case WM_PAINT:
+		hdc = BeginPaint(hwnd, &ps);
+		HandleTimer(hwnd, hdc, x, y, circle, isDirect, SPEED);
+		EndPaint(hwnd, &ps);
+		break;
 	case WM_TIMER:
+		hdc = GetDC(hwnd);
 		switch (wparam)
 		{
 		case BALL_TIMER:
 			if (!moves) return FALSE;
-			isDirect = HandleTimer(hwnd, hdc, x, y, circle, isDirect, 5);
+			isDirect = HandleTimer(hwnd, hdc, x, y, circle, isDirect, SPEED);
 			ValidateRect(hwnd, NULL);
 			break;
-		default:return FALSE;
+		default:break;
 		}
+		ReleaseDC(hwnd, hdc);
 		break;
 	case WM_CLOSE:
-		ReleaseDC(hwnd, hdc);
 		KillTimer(hwnd, BALL_TIMER);
 		DestroyWindow(hwnd);
 		break;

@@ -53,7 +53,7 @@ BOOL InitApplication(HINSTANCE hinstance)
 	wndclass.cbWndExtra = 0;
 	wndclass.hInstance = hinstance;
 	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndclass.hCursor = LoadCursor(NULL, IDC_CROSS);
+	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wndclass.lpszMenuName = NULL;
 	wndclass.lpszClassName = appName;
@@ -118,8 +118,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 			if (area.left >= x || area.right <= 0)
 			{
 				SPEED = -SPEED;
+				
 			}
-			SPEED += (x0 <= x / 2) ? 0.5 : -0.5;
+			SPEED += (x0 <= x / 2) ? 1 : -1;
 			counter = 255;
 			InvalidateRect(hwnd, NULL, true);
 			break;

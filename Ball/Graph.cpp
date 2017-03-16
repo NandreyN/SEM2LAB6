@@ -170,13 +170,17 @@ POINT ConvertCoordinates(int x, int y, int widthOld, int heightOld)
 
 DrawAreaInfo GetAreaInfo(int x, int y)
 {
+
 	int xPoints, yPoints, divValueX, divValueY, a, b; // Кол-во делений
-	xPoints = 7; yPoints = 14;
+	a = -20; b = 20;
+
+	xPoints = abs(a - b); yPoints = 14;
 	divValueX = x / (xPoints * 2);
 	divValueY = y / (yPoints * 2);
 	int newX, newY; newX = x / 2; newY = y / 2;
 	DrawAreaInfo di;
-	a = -3; b = 4;
+
+	
 	di.divValueX = divValueX; di.divValueY = divValueY; di.newX = newX; di.newY = newY; di.xPoints = xPoints; di.yPoints = yPoints;
 	di.a = a; di.b = b;
 	return di;
@@ -232,8 +236,8 @@ DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr)
 		//fx = 1.0/(xArg / dai.divValueX);
 	   //fx = gr.a * ((xArg / dai.divValueX) * (xArg / dai.divValueX)) + gr.b * (xArg / dai.divValueX) + gr.c;
 		if (fx == fx)
-			LineTo(hdc, xArg, fx * dai.divValueY);
-		//SetPixel(hdc, xArg, fx * dai.divValueY, RGB(0,0,0));
+			//LineTo(hdc, xArg, fx * dai.divValueY);
+		SetPixel(hdc, xArg, fx * dai.divValueY, RGB(0,0,0));
 	}
 
 	newPen = CreatePen(PS_DOT, 1, BLACK_PEN);

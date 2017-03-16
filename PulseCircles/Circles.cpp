@@ -81,7 +81,7 @@ BOOL InitApplication(HINSTANCE hinstance)
 	wndclass.cbWndExtra = 0;
 	wndclass.hInstance = hinstance;
 	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndclass.hCursor = LoadCursor(NULL, IDC_CROSS);
+	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wndclass.lpszMenuName = NULL;
 	wndclass.lpszClassName = appName;
