@@ -78,7 +78,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	static bool isInProgress, isRed;
 
 	int R = y / 7;
-	static rgb red, yellow, green, disabledRed, disabledYellow, disabledGreen;
+	//static rgb red, yellow, green, disabledRed, disabledYellow, disabledGreen;
+	static rgb colorCollection[6];
+	static bool colorsActive[6];
+
 	HDC hdc;
 	PAINTSTRUCT ps;
 	RECT clientRect;
@@ -90,14 +93,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		isInProgress = false;
 		isRed = true;
 
-		red = rgb(225, 20, 20);
-		disabledRed = rgb(240,161,146);
+		colorCollection[0] = rgb(225, 20, 20);
+		colorCollection[1] = rgb(240,161,146);
 
-		yellow = rgb(218, 225, 20);
-		disabledYellow = rgb(233,239,150);
+		colorCollection[2] = rgb(218, 225, 20);
+		colorCollection[3] = rgb(233,239,150);
 
-		green = rgb(68, 225, 20);
-		disabledGreen = rgb(186,245,169);
+		colorCollection[4] = rgb(68, 225, 20);
+		colorCollection[5] = rgb(186,245,169);
+
+		for (int i = 1; i < 6; i++) colorsActive[i] = false;
+		colorsActive[0] = true;
+
 		break;
 	case WM_SIZE:
 		x = LOWORD(lparam);
@@ -110,41 +117,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		switch(wparam)
 		{
 		case '+':
-			if (isInProgress ||  !isRed) break;
+			if (isInProgress ||  !isRed) return TRUE;
 
 			isInProgress = true;
 			Sleep(1000);
-			DrawCircle(hdc, centres[1], R, yellow);
+			DrawCircle(hdc, centres[1], R, colorCollection[2]); // yellow 
 			Sleep(1000);
-			DrawCircle(hdc, centres[0], R, disabledRed);
-			DrawCircle(hdc, centres[1], R, disabledYellow);
-			DrawCircle(hdc, centres[2], R, green);
+			DrawCircle(hdc, centres[0], R, colorCollection[1]); // disabledRed
+			DrawCircle(hdc, centres[1], R, colorCollection[3]); // disYellow
+			DrawCircle(hdc, centres[2], R, colorCollection[4]); // green
 			isInProgress = false;
 			isRed = false;
 
+			for (int i = 0; i < 6; i++) colorsActive[i] = false;
+			colorsActive[4] = true;
 			break;
 		case '-':
-			if (isInProgress || isRed) break;
+			if (isInProgress || isRed) return TRUE;
 			isInProgress = true;
 
 			for (int i = 0; i < 3; i++)
 			{
 				Sleep(800);
-				DrawCircle(hdc, centres[2], R, green);
+				DrawCircle(hdc, centres[2], R, colorCollection[4]); // green
+				
 				Sleep(800);
-				DrawCircle(hdc, centres[2], R, disabledGreen);
+				DrawCircle(hdc, centres[2], R, colorCollection[5]); // disGreen
 			}
-			DrawCircle(hdc, centres[1], R, yellow);
-			Sleep(1000);
-			DrawCircle(hdc, centres[1], R, disabledYellow);
+			DrawCircle(hdc, centres[1], R, colorCollection[2]); // yellow
 			
-			DrawCircle(hdc, centres[0], R, red);
+			Sleep(1000);
+			DrawCircle(hdc, centres[1], R, colorCollection[3]); //disYellow
+			
+			DrawCircle(hdc, centres[0], R, colorCollection[0]); //red
 			isInProgress = false;
 			isRed = true;
+
+			for (int i = 0; i < 6; i++) colorsActive[i] = false;
+			colorsActive[0] = true;
 			break;
 		}
-		ReleaseDC(hwnd, hdc);
 		ValidateRect(hwnd, NULL);
+		ReleaseDC(hwnd, hdc);
 		break;
 	}
 	case WM_PAINT:
@@ -154,18 +168,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		GetClientRect(hwnd, &clientRect);
 		FillBackground(hdc, clientRect);
 
+		int indicator = 0;
+
 		POINT circleCenter; circleCenter.x = x / 2;
 		circleCenter.y = y / 6;
 		centres[0] = circleCenter;
-		DrawCircle(hdc, circleCenter, R, red);
+
+		indicator = (colorsActive[0]) ? 0 : 1;
+		DrawCircle(hdc, circleCenter, R, colorCollection[indicator]);
 
 		circleCenter.y = y / 2;
 		centres[1] = circleCenter;
-		DrawCircle(hdc, circleCenter, R, disabledYellow);
+
+		indicator = (colorsActive[2]) ? 2 : 3;
+		DrawCircle(hdc, circleCenter, R, colorCollection[indicator]);
 
 		circleCenter.y = y - y / 6;
 		centres[2] = circleCenter;
-		DrawCircle(hdc, circleCenter, R, disabledGreen);
+
+		indicator = (colorsActive[4]) ? 4 : 5;
+		DrawCircle(hdc, circleCenter, R, colorCollection[indicator]);
 
 		EndPaint(hwnd, &ps);
 	}
