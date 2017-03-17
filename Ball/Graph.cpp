@@ -1,4 +1,17 @@
 #undef UNICODE
+
+#define EXP(x) exp(x)
+#define LN(x) log(x)
+#define SQRT(x) sqrt(x)
+#define XSINX(x) (double)x*sin(x)
+#define CUSTOM(x) (double)50/(50 - x*x)
+
+#define EXP_ID 0
+#define LN_ID 1
+#define SQRT_ID 2
+#define XSINX_ID 3
+#define CUSTOM_ID 4
+
 #include <windows.h>
 #include  <math.h>
 #include <cmath>
@@ -18,10 +31,11 @@ struct DrawAreaInfo
 BOOL InitApplication(HINSTANCE hinstance);
 BOOL InitInstance(HINSTANCE hinstance, int nCmdShow);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
-DrawAreaInfo GetAreaInfo(int x, int y);
-DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& graph);
+DrawAreaInfo GetAreaInfo(int x, int y, int a, int b);
+DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& graph , int funcID, int a, int b);
 POINT ConvertCoordinates(int x, int y, int widthOld, int heightOld);
 double GetDistance(int x1, int y1, int x2, int y2);
+double CALLFUNC(int id, double x);
 
 int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE prevHinstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -72,18 +86,22 @@ BOOL InitApplication(HINSTANCE hinstance)
 }
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	static int x, y;
-	static HDC hdc;
+	static int x, y,a,b;
+	static HDC hdc, buffer;
 	static DrawAreaInfo dAInfo;
+	HBITMAP hbmp;
+
 	PAINTSTRUCT ps;
+	static int funcID;
 
 	RECT clientRect;
 	static Graph gr;
 	switch (message)
 	{
 	case WM_CREATE:
-		hdc = GetDC(hwnd);
 		gr.a = 1; gr.b = 1; gr.c = 1;
+		funcID = XSINX_ID;
+		a = -8; b = 15;
 
 		break;
 	case WM_SIZE:
@@ -92,40 +110,64 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		break;
 	case WM_PAINT:
 	{
+		RECT Rect; GetClientRect(hwnd, &Rect);
+
+		hdc = BeginPaint(hwnd, &ps);
 		SetMapMode(hdc, MM_ANISOTROPIC);
 		SetWindowExtEx(hdc, x, y, NULL);
 		SetViewportExtEx(hdc, x, -y, NULL);
 		SetViewportOrgEx(hdc, x / 2, y / 2, NULL);
-		dAInfo = Draw(hdc, x, y, gr);
+
+		{/*buffer = CreateCompatibleDC(hdc);
+		hbmp = CreateCompatibleBitmap(hdc, Rect.right - Rect.left, Rect.bottom - Rect.top);
+		SelectObject(buffer, hbmp);
+
+
+		LOGBRUSH br;
+		br.lbStyle = BS_SOLID;
+		br.lbColor = RGB(255,255,255);
+		HBRUSH brush;
+		brush = CreateBrushIndirect(&br);
+		FillRect(buffer, &Rect, brush);
+		DeleteObject(brush);
+
+		dAInfo = Draw(buffer, x, y, gr, funcID);
+		BitBlt(hdc, -x/2, y/2,x*2, y*2, buffer, -x/2, y/2, SRCCOPY);
+
+		EndPaint(hwnd, &ps);
+
+		DeleteObject(buffer);
+		DeleteObject(hbmp);
+
+		//ReleaseDC(hwnd, buffer);*/}
+		dAInfo = Draw(hdc, x, y, gr, funcID, a ,b);
+		EndPaint(hwnd, &ps);
 		break;
 	}
 
 	case WM_LBUTTONDOWN:
 	{
-		DrawAreaInfo di = GetAreaInfo(x, y);
+		DrawAreaInfo di = GetAreaInfo(x, y, a,b);
 		int cx = LOWORD(lparam);
 		int cy = HIWORD(lparam);
 		POINT clickedCoord = ConvertCoordinates(cx, cy, x, y);
 
-		//double fx = log((double)clickedCoord.x / di.divValueX );
-		// double fx = 1.0/((double)clickedCoord.x / di.divValueX );
-		double fx = sqrt((double)clickedCoord.x / di.divValueX);
-		//double fx = (gr.a*((double)clickedCoord.x / di.divValueX)*((double)clickedCoord.x / di.divValueX) + gr.b*((double)clickedCoord.x / di.divValueX) + gr.c);
-
-		//double newY = (double)clickedCoord.y / di.divValueY;
+		double fx = CALLFUNC(funcID, clickedCoord.x / di.divValueX);
+		
 		double distance = abs(fx - ((double)clickedCoord.y) / di.divValueY);
 		if (distance <= 0.8)
 		{
 			string text;
 			double t = (double)clickedCoord.x / di.divValueX;
 			text += "X: " + to_string(t); text += ", Y : " + to_string(fx);
+			hdc = GetDC(hwnd);
 			TextOut(hdc, 0, 0, text.c_str(), text.size());
+			ReleaseDC(hwnd, hdc);
 		}
 		break;
 	}
 
 	case WM_CLOSE:
-		ReleaseDC(hwnd, hdc);
 		DestroyWindow(hwnd);
 		break;
 	case WM_DESTROY:
@@ -168,26 +210,23 @@ POINT ConvertCoordinates(int x, int y, int widthOld, int heightOld)
 	return pt;
 }
 
-DrawAreaInfo GetAreaInfo(int x, int y)
+DrawAreaInfo GetAreaInfo(int x, int y, int a, int b)
 {
+	int xPoints, yPoints, divValueX, divValueY; // Кол-во делений
 
-	int xPoints, yPoints, divValueX, divValueY, a, b; // Кол-во делений
-	a = -20; b = 20;
-
-	xPoints = abs(a - b); yPoints = 14;
+	xPoints = abs(b - a); yPoints = xPoints / 2;
 	divValueX = x / (xPoints * 2);
 	divValueY = y / (yPoints * 2);
 	int newX, newY; newX = x / 2; newY = y / 2;
 	DrawAreaInfo di;
 
-	
+
 	di.divValueX = divValueX; di.divValueY = divValueY; di.newX = newX; di.newY = newY; di.xPoints = xPoints; di.yPoints = yPoints;
-	di.a = a; di.b = b;
 	return di;
 }
-DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr)
+DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr, int ID, int a , int b)
 {
-	DrawAreaInfo dai = GetAreaInfo(x, y);
+	DrawAreaInfo dai = GetAreaInfo(x, y, a,b);
 
 	HPEN newPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
 	HPEN oldPen = (HPEN)SelectObject(hdc, newPen);
@@ -217,36 +256,25 @@ DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr)
 		LineTo(hdc, -5, -yy);
 	}
 	MoveToEx(hdc, dai.a, 0, NULL);
-	//MoveToEx(hdc, -dai.newX, 0, NULL);
 
-	//double fx = log(dai.a / dai.divValueX);
-	//double fx = 1.0/(dai.a / dai.divValueX);
-	//double fx = 0;
-	//double fx = sqrt(dai.a * dai.divValueX);
-	double fx = exp(dai.a * dai.divValueX);
-	//if (fx == fx && !isinf(fx))
-		MoveToEx(hdc, dai.a * dai.divValueX, fx * dai.divValueY, NULL);
-	//LineTo(hdc, xArg, fx * dai.divValueY);
-	// Drawing
-	for (double xArg = dai.a * dai.divValueX; xArg <= dai.b * dai.divValueX; xArg += 0.1)
+	double fx = CALLFUNC(ID, a * dai.divValueX);
+	
+	MoveToEx(hdc, a * dai.divValueX, fx * dai.divValueY, NULL);
+
+	for (double xArg = a * dai.divValueX; xArg <= b * dai.divValueX; xArg += 0.05)
 	{
-		fx = exp(xArg / dai.divValueX);
-		//fx = sqrt(xArg / dai.divValueX);
-		//fx = log(xArg / dai.divValueX);
-		//fx = 1.0/(xArg / dai.divValueX);
-	   //fx = gr.a * ((xArg / dai.divValueX) * (xArg / dai.divValueX)) + gr.b * (xArg / dai.divValueX) + gr.c;
+		fx = CALLFUNC(ID, xArg / dai.divValueX);
 		if (fx == fx)
-			//LineTo(hdc, xArg, fx * dai.divValueY);
-		SetPixel(hdc, xArg, fx * dai.divValueY, RGB(0,0,0));
+			SetPixel(hdc, xArg, fx * dai.divValueY, RGB(0, 0, 0));
 	}
 
 	newPen = CreatePen(PS_DOT, 1, BLACK_PEN);
 	oldPen = (HPEN)SelectObject(hdc, newPen);
-	MoveToEx(hdc, dai.a * dai.divValueX, dai.newY, NULL);
-	LineTo(hdc, dai.a * dai.divValueX, -dai.newY);
+	MoveToEx(hdc, a * dai.divValueX, dai.newY, NULL);
+	LineTo(hdc, a * dai.divValueX, -dai.newY);
 
-	MoveToEx(hdc, dai.b * dai.divValueX, dai.newY, NULL);
-	LineTo(hdc, dai.b * dai.divValueX, -dai.newY);
+	MoveToEx(hdc, b * dai.divValueX, dai.newY, NULL);
+	LineTo(hdc, b * dai.divValueX, -dai.newY);
 	SelectObject(hdc, oldPen);
 	DeleteObject(newPen);
 
@@ -255,4 +283,23 @@ DrawAreaInfo Draw(HDC& hdc, int x, int y, Graph& gr)
 double GetDistance(int x1, int y1, int x2, int y2)
 {
 	return sqrt(pow((x1 - x2), 2) + pow((y1 - y2), 2));
+}
+
+double CALLFUNC(int id , double x)
+{
+	double val;
+	switch (id)
+	{
+	case EXP_ID:
+		return EXP(x);
+	case LN_ID:
+		return LN(x);
+	case SQRT_ID:
+		return SQRT(x);
+	case XSINX_ID:
+		return XSINX(x);
+	case CUSTOM_ID:
+		return CUSTOM(x);
+	default: return 0.0;
+	}
 }
