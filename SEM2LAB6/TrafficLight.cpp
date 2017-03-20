@@ -113,11 +113,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	case WM_CHAR:
 	{
 		hdc = GetDC(hwnd);
-		
 		switch(wparam)
 		{
 		case '+':
-			if (isInProgress ||  !isRed) return TRUE;
+			if (!isRed) return FALSE;
+			if (isInProgress) return FALSE;
 
 			isInProgress = true;
 			Sleep(1000);
@@ -133,7 +133,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 			colorsActive[4] = true;
 			break;
 		case '-':
-			if (isInProgress || isRed) return TRUE;
+			if (isRed) return FALSE;
+			if (isInProgress) return FALSE;
 			isInProgress = true;
 
 			for (int i = 0; i < 3; i++)

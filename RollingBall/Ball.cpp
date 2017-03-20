@@ -78,7 +78,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	switch (message)
 	{
 	case WM_CREATE:
-		SetTimer(hwnd, BALL_TIMER, 20, (TIMERPROC)NULL);
+		SetTimer(hwnd, BALL_TIMER, 1000, (TIMERPROC)NULL);
 		circle.center.x = circle.center.y = 0;
 		circle.R = 30;
 		isDirect = true;

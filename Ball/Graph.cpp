@@ -4,7 +4,7 @@
 #define LN(x) log(x)
 #define SQRT(x) sqrt(x)
 #define XSINX(x) (double)x*sin(x)
-#define CUSTOM(x) (double)50/(50 - x*x)
+#define CUSTOM(x) (double)1/x
 
 #define EXP_ID 0
 #define LN_ID 1
@@ -100,8 +100,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	{
 	case WM_CREATE:
 		gr.a = 1; gr.b = 1; gr.c = 1;
-		funcID = XSINX_ID;
-		a = -8; b = 15;
+		funcID = CUSTOM_ID;
+		a = -20; b = 20;
 
 		break;
 	case WM_SIZE:
