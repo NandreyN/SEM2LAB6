@@ -129,27 +129,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		case CARTIMERFORWARD:
 			if (x0 <= x / 8)
 			{
+				dX = aX;
 				dY = 0;
 				dAng = 0;
 			}
 
 			if (x0 > x / 8 && 2 * x / 8)
 			{
+				dX = aX;
 				dY = bY;
 				dAng = cAng;
 			}
 			if (x0 >= 2 * x / 8 && x0 <= 6 * x / 8)
 			{
-				dY = bY * 1.3;
+				dY = bY * 1.8;
+				dX = aX * 1.2;
 				dAng = 0;
 			}
 			if (x0 >= 6 * x / 8 && x0 <= 7 * x / 8)
 			{
+				dX = aX;
 				dY = bY;
 				dAng = -cAng;
 			}
 			if (x0 > 7 * x / 8)
 			{
+				dX = aX * 0.7;
 				dY = 0;
 				dAng = 0;
 			}
