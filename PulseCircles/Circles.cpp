@@ -6,6 +6,7 @@
 #include  <math.h>
 #include <cmath>
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 void DrawCircle(HDC& hdc, Circle& circle, rgb color);
 void ClearCircle(HDC& hdc, Circle& circle);
 bool isInCircle(Circle& circle, int x, int y);
-bool PerformCircleChanging(HDC& hdc, Circle& circle, int delta, bool state, rgb& color);
+bool PerformCircleChanging(Circle& circle, int delta, bool state);
 
 static char appName[] = "Lab6";
 static char title[] = "Circles";
@@ -100,6 +101,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	static int x, y, R, delta;
 	static bool beat[3];
 	static bool currentStates[3];
+	static ofstream out;
 
 	static rgb red, yellow, green;
 	HDC hdc;
@@ -116,7 +118,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		yellow = rgb(218, 225, 20);
 		green = rgb(68, 225, 20);
 		RECT re;
-		
+
 		GetClientRect(hwnd, &re);
 		x = re.right;
 		y = re.bottom;
@@ -130,20 +132,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 
 		center.x = x / 2; center.y = y - y / 4;
 		circles[2] = Circle(center, R);
+
+		out.open("log.txt");
 		break;
 	case WM_SIZE:
-		x = LOWORD(lparam);
-		y = HIWORD(lparam);
+		GetClientRect(hwnd, &clientRect);
+		out << "CLIENT CHANGED :" << endl << " ___________________________________________" << endl;
+		x = clientRect.right;
+		y = clientRect.bottom;
+
 		R = (x <= y) ? x / 5 : y / 5;
+		delta = R *0.2;
+		out << "x = " << x << ", y = " << y << "New R = " << R << ", delta = " << delta<< endl << "_______________________________ " << endl;
 		break;
 
 	case WM_PAINT:
 	{
 		hdc = BeginPaint(hwnd, &ps);
-		
+
 		DrawCircle(hdc, circles[0], red);
+		//out << "Red :" << circles[0].R << endl;
 		DrawCircle(hdc, circles[1], green);
+		//out << "Green :" << circles[1].R << endl;
 		DrawCircle(hdc, circles[2], yellow);
+		//out << "Yellow :" << circles[2].R << endl;
 
 		GetClientRect(hwnd, &clientRect);
 		EndPaint(hwnd, &ps);
@@ -178,26 +190,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 
 	case WM_TIMER:
 	{
-		hdc = GetDC(hwnd);
-		delta = R*0.2;
 		switch (wparam)
 		{
 		case 0: // red
-			currentStates[0] = PerformCircleChanging(hdc, circles[0], delta, currentStates[0], red);
+			currentStates[0] = PerformCircleChanging(circles[0], delta, currentStates[0]);
 			break;
 		case 1:
-			currentStates[1] = PerformCircleChanging(hdc, circles[1], delta, currentStates[1], green);
+			currentStates[1] = PerformCircleChanging(circles[1], delta, currentStates[1]);
 			break; // green
 		case 2:
-			currentStates[2] = PerformCircleChanging(hdc, circles[2], delta, currentStates[2], yellow);
+			currentStates[2] = PerformCircleChanging(circles[2], delta, currentStates[2]);
 			break; // yellow
 		}
-		ReleaseDC(hwnd, hdc);
+		InvalidateRect(hwnd, NULL, true);
 		break;
 	}
 
 	case WM_CLOSE:
 		DestroyWindow(hwnd);
+		out.close();
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -257,16 +268,15 @@ bool isInCircle(Circle& circle, int x, int y)
 {
 	return pow(circle.center.x - x, 2) + pow(circle.center.y - y, 2) <= pow(circle.R, 2);
 }
-bool PerformCircleChanging(HDC& hdc, Circle& circle, int delta, bool state, rgb& color)
+bool PerformCircleChanging(Circle& circle, int delta, bool state)
 {
+	if (delta == 0) return state;
+
 	if (state) // big
 	{
-		ClearCircle(hdc, circle);
 		circle.R -= delta;
-		DrawCircle(hdc, circle, color);
 		return false;
 	}
 	circle.R += delta;
-	DrawCircle(hdc, circle, color);
 	return true;
 }
