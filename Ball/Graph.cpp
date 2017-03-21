@@ -100,8 +100,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	{
 	case WM_CREATE:
 		gr.a = 1; gr.b = 1; gr.c = 1;
-		funcID = CUSTOM_ID;
-		a = -20; b = 20;
+		funcID = XSINX_ID;
+		a = -50; b = 30;
 
 		break;
 	case WM_SIZE:
@@ -152,10 +152,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		int cy = HIWORD(lparam);
 		POINT clickedCoord = ConvertCoordinates(cx, cy, x, y);
 
-		double fx = CALLFUNC(funcID, clickedCoord.x / di.divValueX);
+		double fx = CALLFUNC(funcID, (double)clickedCoord.x / di.divValueX);
 		
 		double distance = abs(fx - ((double)clickedCoord.y) / di.divValueY);
-		if (distance <= 0.8)
+		if (distance <= 0.3)
 		{
 			string text;
 			double t = (double)clickedCoord.x / di.divValueX;

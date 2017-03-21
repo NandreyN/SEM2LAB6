@@ -111,10 +111,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	{
 	case WM_CREATE:
 		for (int i = 0; i < 3; i++) beat[i] = false;
-
+		POINT center;
 		red = rgb(225, 20, 20);
 		yellow = rgb(218, 225, 20);
 		green = rgb(68, 225, 20);
+		RECT re;
+		
+		GetClientRect(hwnd, &re);
+		x = re.right;
+		y = re.bottom;
+		R = (x <= y) ? x / 5 : y / 5;
+		delta = R *0.2;
+		center.x = 1.2 * R; center.y = y / 4;
+		circles[0] = Circle(center, R);
+
+		center.x = x - 1.2*R; center.y = y / 4;
+		circles[1] = Circle(center, R);
+
+		center.x = x / 2; center.y = y - y / 4;
+		circles[2] = Circle(center, R);
 		break;
 	case WM_SIZE:
 		x = LOWORD(lparam);
@@ -125,18 +140,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	case WM_PAINT:
 	{
 		hdc = BeginPaint(hwnd, &ps);
-		POINT center;
-
-		center.x = 1.2 * R; center.y = y / 4;
-		circles[0] = Circle(center, R);
+		
 		DrawCircle(hdc, circles[0], red);
-
-		center.x = x - 1.2*R; center.y = y / 4;
-		circles[1] = Circle(center, R);
 		DrawCircle(hdc, circles[1], green);
-
-		center.x = x / 2; center.y = y - y / 4;
-		circles[2] = Circle(center, R);
 		DrawCircle(hdc, circles[2], yellow);
 
 		GetClientRect(hwnd, &clientRect);
@@ -159,7 +165,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 
 	case WM_RBUTTONUP:
 	{
-		delta = R *0.2;
 		int cX = LOWORD(lparam), cY = HIWORD(lparam);
 		for (int i = 0; i < 3; i++)
 			if (isInCircle(circles[i], cX, cY))
